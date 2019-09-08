@@ -1,0 +1,151 @@
+﻿<Page
+    x:Class="NicoLiveAlertTwitterCS.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NicoLiveAlertTwitterCS"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <NavigationView x:Name="navigation_view" IsBackButtonVisible="Collapsed" ItemInvoked="NavigationView_ItemInvoked" >
+            <NavigationView.MenuItems>
+                <NavigationViewItem Tag="home" Icon="Home" Content="ホーム" Tapped="Navigation_view_Tapped">
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Name="alert_header" Content="ニコ生アラート" Tapped="Navigation_view_Tapped"/>
+                <NavigationViewItem Tag="register_account" Content="生主アカウント" Icon="People" Tapped="Navigation_view_Tapped"/>
+                <NavigationViewItem Visibility="Collapsed" Tag="alert_history" Content="アラート履歴" Icon="Clock" Tapped="Navigation_view_Tapped"/>
+
+                <NavigationViewItemHeader x:Name="auto_admission_header" Content="予約枠自動入場" Tapped="Navigation_view_Tapped"/>
+                <NavigationViewItem Tag="alert_list" Content="予約リスト" Icon="Calendar" Tapped="Navigation_view_Tapped"/>
+                <NavigationViewItem Tag="follow_program" Content="フォロー中の番組" Icon="Favorite" Tapped="Navigation_view_Tapped"/>
+                <NavigationViewItem Tag="nicorepo" Content="ニコレポ" Icon="Video" Tapped="Navigation_view_Tapped"/>
+
+            </NavigationView.MenuItems>
+
+            <NavigationView.PaneFooter>
+                <NavigationViewItem Tag="account_setting" Content="Twiiter/ニコニコログイン" Icon="Add" Tapped="Navigation_view_Tapped"/>
+            </NavigationView.PaneFooter>
+
+            <NavigationView.Content>
+
+                <Grid>
+
+                    <Grid x:Name="login_stackpanel" Visibility="Collapsed">
+                        <ContentDialog  x:Name="pin_dialog" Title="PINコードを入力してください" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="認証" CloseButtonText="キャンセル" PrimaryButtonClick="TwitterLoginDialogButtonClick">
+                            <TextBox x:Name="pin_dialog_textbox" PlaceholderText="テキスト" FontSize="20" Height="40" ></TextBox>
+                        </ContentDialog>
+                        <ContentDialog  x:Name="nico_login_dialog" Title="niconicoへログイン" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="認証" CloseButtonText="キャンセル" PrimaryButtonClick="NicoLoginDialogButtonClick">
+                            <StackPanel>
+                                <TextBox x:Name="nico_login_dialog_mail_textbox" PlaceholderText="メールアドレス" FontSize="20" Height="40" ></TextBox>
+                                <PasswordBox  x:Name="nico_login_dialog_pass_textbox" PlaceholderText="パスワード"  FontSize="20" Height="40" ></PasswordBox>
+                            </StackPanel>
+                        </ContentDialog>
+                        <StackPanel Orientation="Vertical" Padding="10">
+                            <StackPanel Orientation="Vertical" Margin="10,20,10,10">
+                                <TextBlock Text="Twitterログインはここから" FontSize="30"></TextBlock>
+                                <Button Content="Twitterログイン" FontSize="20" Click="TwitterLoginButtonClick"></Button>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical" Margin="10,20,10,10">
+                                <TextBlock Text="niconicoログインはここから" FontSize="30"></TextBlock>
+                                <Button Content="niconicoログイン" FontSize="20" Click="NicoLoginButtonClick"></Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid x:Name="home_stackpanel" Visibility="Collapsed">
+                        <StackPanel Orientation="Vertical" Margin="10">
+                            <TextBlock Text="ニコ生アラート状態：接続していません。" FontSize="25"  Padding="10,20,10,10"/>
+                            <ToggleSwitch Tag="home_twitter_stream_switch" Header="接続することでリアルタイムで番組開始ツイートを監視します。" FontSize="20" Margin="10" OnContent="接続" OffContent="未接続" Toggled="FilterStreamToggleSwitch"/>
+
+                            <TextBlock Visibility="Collapsed" Text="予約枠自動入場" FontSize="25" Padding="10,20,10,10" />
+                            <ToggleSwitch Visibility="Collapsed" Tag="home_auto_admission_switch" Header="自動で予約枠を探し、開場時間になったら開きます。" FontSize="20" Margin="10" OnContent="利用する" OffContent="利用しない" Toggled="AutoAdmisionToggleSwitch"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid x:Name="nicolivefav_stackpanel" Visibility="Collapsed">
+                        <ListView x:Name="nico_fav_listview" ItemsSource="{Binding list}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="10">
+                                        <TextBlock x:Name="nico_fav_listview_textblock" MaxLines="1" Text="{Binding Name}" FontSize="20"/>
+                                        <Button Content="予約枠自動入場登録" Tag="{Binding Pos}" Click="NicoFavAddAutoAdmissionButtonClick"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+
+                    <Grid x:Name="nicorepo_stackpanel" Visibility="Collapsed">
+                        <ListView x:Name="nico_repo_listview" ItemsSource="{Binding list}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="10">
+                                        <TextBlock x:Name="nico_repo_listview_textblock" MaxLines="1" Text="{Binding Name}" FontSize="20"/>
+                                        <Button Content="予約枠自動入場登録" Tag="{Binding Pos}" Click="NicoRepoAddAdmissionButtonClick"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid >
+
+                    <Grid x:Name="twitterregister_stackpanel" Visibility="Collapsed">
+                        <!-- アカウント追加 -->
+
+                        <ListView x:Name="twitterregister_listview" Height="Auto">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="10">
+                                        <TextBlock x:Name="account_listview_textblock" Text="{Binding Name}" FontSize="20"/>
+                                        <Button Content="削除" Tag="{Binding Pos}" Click="TwitterAccountDeleteButtonClick"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+
+                    <Grid x:Name="autoadmission_stackpanel" Visibility="Collapsed">
+                        <ListView x:Name="auto_admission_listview">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="10">
+                                        <TextBlock x:Name="nico_fav_listview_textblock" MaxLines="1" Text="{Binding Name}" FontSize="20"/>
+                                        <Button Content="予約枠自動入場削除" Tag="{Binding Pos}" Click="AutoAdmissionDeleteButtonClick"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+
+                </Grid>
+
+            </NavigationView.Content>
+
+            <NavigationView.Header>
+                <StackPanel Orientation="Horizontal">
+
+                    <TextBlock x:Name="NavHeaderTitle" Text="ホーム" FontSize="30" VerticalAlignment="Center"/>
+
+                    <Button x:Name="UpdateButton" Click="UpdateButtonClick" Margin="50,0,0,0" Background="Transparent" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="Sync"/>
+                            <TextBlock FontSize="20"> 更新</TextBlock>
+                        </StackPanel>
+                    </Button>
+
+                    <TextBox FontSize="20" PlaceholderText="TwitterのID（@）" x:Name="account_textblock" Margin="50,10,10,10" Height="40" Visibility="Collapsed"></TextBox>
+                    <Button x:Name="account_add_button" Click="TwitterAccountAddButtonClick" Background="Transparent" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="AddFriend"/>
+                            <TextBlock FontSize="20"> 追加</TextBlock>
+                        </StackPanel>
+                    </Button>
+
+                </StackPanel>
+            </NavigationView.Header>
+
+        </NavigationView>
+    </Grid>
+</Page>

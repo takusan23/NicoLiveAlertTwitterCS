@@ -1,0 +1,31 @@
+﻿<Page
+    x:Class="NicoLiveAlertTwitterCS.RegisterTwitterAccountPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NicoLiveAlertTwitterCS"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <StackPanel Width="1500">
+
+            <!-- アカウント追加 -->
+            <StackPanel Orientation="Horizontal" Padding="10">
+                <TextBox x:Name="account_textblock" Width="200" />
+                <Button x:Name="account_add_button" Content="アカウント追加" Click="Account_add_button_Click"/>
+            </StackPanel>
+            <ListView x:Name="account_listview" Height="Auto">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Padding="10">
+                            <TextBlock x:Name="account_listview_textblock" Text="{Binding Name}" FontSize="20"/>
+                            <Button Content="削除" Tag="{Binding Pos}" Click="Delete_Button_Click"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </Grid>
+</Page>
