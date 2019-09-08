@@ -7,8 +7,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -58,6 +61,13 @@ namespace NicoLiveAlertTwitterCS
         {
             this.InitializeComponent();
 
+            //タイトルばーを半透明に
+            var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
+            coreTitleBar.ExtendViewIntoTitleBar = true;
+            //タイトル
+            ApplicationView appView = ApplicationView.GetForCurrentView();
+            appView.Title = "ニコ生アラート（青鳥CS）";
+
             //配列に入れる
             PanelList.Add(login_stackpanel);
             PanelList.Add(home_stackpanel); ;
@@ -89,10 +99,33 @@ namespace NicoLiveAlertTwitterCS
             autoAdmission.startAutoAdmission();
 
 
+            //設定
+            loadSettings();
+
+        }
+
+        private void loadSettings()
+        {
+            //起動したらすぐにFilterStreamに接続する
+            if (setting.Values["lunch_filterstream"] != null)
+            {
+                if (Boolean.Parse(setting.Values["lunch_filterstream"].ToString()))
+                {
+                    filterStream.connectFilterStream(this);
+                    home_twitter_stream_switch.IsOn = true;
+                    home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です";
+                }
+            }
         }
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
+            //設定を押したときもNavigation_view_Tappedで処理できるように。
+            var settingItem = navigation_view.SettingsItem as NavigationViewItem;
+            settingItem.Tag = "settings";
+            settingItem.Tapped -= Navigation_view_Tapped;
+            settingItem.Tapped += Navigation_view_Tapped;
+
             //var tag = args.InvokedItem.ToString();
             //navigation_view.Header = tag;
         }
@@ -205,7 +238,28 @@ namespace NicoLiveAlertTwitterCS
                     UpdateButton.Visibility = Visibility.Collapsed;
                     PanelList[0].Visibility = Visibility.Visible;
                     break;
+                case "settings":
+                    showSetting();
+                    break;
             }
+        }
+
+        //設定ウィンドウ表示
+        public async void showSetting()
+        {
+            // https://blog.okazuki.jp/entry/2015/10/23/214946
+            var currentViewId = ApplicationView.GetForCurrentView().Id;
+            await CoreApplication.CreateNewView().Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                Window.Current.Content = new Frame();
+                ((Frame)Window.Current.Content).Navigate(typeof(SettingsPage));
+                Window.Current.Activate();
+                await ApplicationViewSwitcher.TryShowAsStandaloneAsync(
+                    ApplicationView.GetApplicationViewIdForWindow(Window.Current.CoreWindow),
+                    ViewSizePreference.Default,
+                    currentViewId,
+                    ViewSizePreference.Default);
+            });
         }
 
         private async void TwitterLoginButtonClick(object sender, RoutedEventArgs e)
@@ -235,10 +289,12 @@ namespace NicoLiveAlertTwitterCS
             if (toggleSwitch.IsOn == true)
             {
                 filterStream.connectFilterStream(this);
+                home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です";
             }
             else
             {
                 filterStream.tokenSource.Cancel();
+                home_twitter_stream_textblock.Text = "ニコ生アラート状態：未接続です。";
             }
         }
         private void AutoAdmisionToggleSwitch(object sender, RoutedEventArgs e)

@@ -1,0 +1,20 @@
+﻿<Page
+    x:Class="NicoLiveAlertTwitterCS.View.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NicoLiveAlertTwitterCS.View"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="20">
+                <TextBlock Text="設定" FontSize="30" />
+                <TextBlock Text="起動時に自動で（FilterStreamに）接続する"  FontSize="20"/>
+                <ToggleSwitch OnContent="接続" OffContent="接続しない" Toggled="FilterStreamToggleSwitch"></ToggleSwitch>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
