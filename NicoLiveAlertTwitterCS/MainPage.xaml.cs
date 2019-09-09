@@ -1,4 +1,6 @@
-﻿using NicoLiveAlertTwitterCS.AutoAdmission;
+﻿using Newtonsoft.Json;
+using NicoLiveAlertTwitterCS.AutoAdmission;
+using NicoLiveAlertTwitterCS.JSONClass;
 using NicoLiveAlertTwitterCS.niconico;
 using NicoLiveAlertTwitterCS.Twitter;
 using NicoLiveAlertTwitterCS.View;
@@ -101,7 +103,6 @@ namespace NicoLiveAlertTwitterCS
 
             //予約枠自動入場有効。
             autoAdmission.startAutoAdmission();
-
 
             //設定
             loadSettings();
@@ -405,6 +406,8 @@ namespace NicoLiveAlertTwitterCS
             var id = AddAdmissionDialogProgramID.Text;
             var datePicker = AddAdmissionDialogDatePicker.Date;
             var timePicker = AddAdmissionDialogTimePicker.Time;
+            //非表示
+            AddAdmissionDialog.Hide();
             if (title != null && id != null && datePicker != null && timePicker != null)
             {
                 //Dateに時間追加すりゅ
@@ -413,6 +416,43 @@ namespace NicoLiveAlertTwitterCS
                 var unix = new DateTimeOffset(date.Ticks, new TimeSpan(+09, 00, 00));
                 //追加する
                 autoAdmissionList.addAdmission(title, id, unix.ToUnixTimeSeconds());
+
+            }
+        }
+
+        private async void AddAdmissionDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            var id = AddAdmissionDialogProgramID.Text;
+            //予約枠自動入場　手動追加　APIで自動取得　押したとき
+            //APIを叩く（https://live2.nicovideo.jp/watch/{LiveID}/programinfo）
+            var nicoProgramInfo = new NicoLiveProgramInfo();
+            var json = await nicoProgramInfo.getProgramInfo(id);
+            if (json != null)
+            {
+                //予約枠？
+                if (json.data.status == "reserved")
+                {
+                    AddAdmissionDialogProgramTitle.Text = json.data.title;
+                    //UnixTime->DateTime
+                    var dateTime = DateTimeOffset.FromUnixTimeSeconds(json.data.beginAt).LocalDateTime;
+                    //TimeSpan作ってTimePickerに反映させる
+                    var timeSpan = new TimeSpan(dateTime.Hour, dateTime.Minute, 0);
+                    //適用
+                    AddAdmissionDialogDatePicker.Date = dateTime;
+                    AddAdmissionDialogTimePicker.Time = timeSpan;
+                    //何故か消えるので再表示
+                    await AddAdmissionDialog.ShowAsync();
+                }
+                else
+                {
+                    //予約枠以外は追加できないようにする
+                    ContentDialog errorDiaog = new ContentDialog
+                    {
+                        Title = "予約枠以外は利用できません。",
+                        CloseButtonText = "閉じる"
+                    };
+                    await errorDiaog.ShowAsync();
+                }
             }
         }
     }

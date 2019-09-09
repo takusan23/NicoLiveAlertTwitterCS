@@ -113,6 +113,18 @@ namespace NicoLiveAlertTwitterCS.niconico
 
             //登録ボタン押した。ダイアログだす
             var dateTime = FromUnixTime(item.beginAt);
+
+            //今の予約枠自動登録リスト
+            //設定読み込み
+            var admissionList = new List<string>();
+            var addAdmissionString = setting.Values["auto_admission_list"].ToString();
+            var addAdmissionJsonArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(addAdmissionString);
+            foreach (var admission in addAdmissionJsonArray)
+            {
+                admissionList.Add(admission.ID);
+            }
+
+
             //ダイアログ出す
             ContentDialog deleteFileDialog = new ContentDialog
             {
@@ -122,29 +134,48 @@ namespace NicoLiveAlertTwitterCS.niconico
                 CloseButtonText = "キャンセル"
             };
 
-            ContentDialogResult result = await deleteFileDialog.ShowAsync();
-            //押したとき
-            if (result == ContentDialogResult.Primary)
+            //被りダイアログ
+            ContentDialog errorDiaog = new ContentDialog
             {
-                //追加
-                if (setting.Values["auto_admission_list"] != null)
+                Title = "追加済みです",
+                Content = $"{item.Name}\n入場 : {dateTime.ToString()}",
+                CloseButtonText = "閉じる"
+            };
+
+            if (!admissionList.Contains(item.ID))
+            {
+                //かぶってない
+                ContentDialogResult result = await deleteFileDialog.ShowAsync();
+                //押したとき
+                if (result == ContentDialogResult.Primary)
                 {
                     //追加
-                    var account_list = setting.Values["auto_admission_list"].ToString();
-                    var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
-                    accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
-                    //JSON配列に変換
-                    setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
-                }
-                else
-                {
-                    //初めて
-                    var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>("[]");
-                    accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
-                    //JSON配列に変換
-                    setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    if (setting.Values["auto_admission_list"] != null)
+                    {
+                        //追加
+                        var account_list = setting.Values["auto_admission_list"].ToString();
+                        var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
+                        accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
+                        //JSON配列に変換
+                        setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    }
+                    else
+                    {
+                        //初めて
+                        var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>("[]");
+                        accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
+                        //JSON配列に変換
+                        setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    }
                 }
             }
+            else
+            {
+                //追加済み
+                await errorDiaog.ShowAsync();
+            }
+
+
         }
 
         public DateTime FromUnixTime(long unixTime)

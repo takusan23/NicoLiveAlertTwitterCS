@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -36,11 +37,11 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
         public void loadAutoAddAutoAdmissionList()
         {
             list.Clear();
-            //予約枠自動登録自動入場リスト読み込み
-            if (setting.Values["autoadd_list"] != null)
+            //コミュニティリスト読み込み
+            if (setting.Values["autoadd_community"] != null)
             {
                 //存在チェック通過
-                var account_list = setting.Values["autoadd_list"].ToString();
+                var account_list = setting.Values["autoadd_community"].ToString();
                 var jsonArray = JsonConvert.DeserializeObject<List<AutoAddAutoAdmissionListViewData>>(account_list);
                 var pos = 0;
                 foreach (var community in jsonArray)
@@ -55,14 +56,14 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
         public void addAutoAddAutoAdmissionList(string communityID)
         {
             ///予約枠自動登録自動入場リスト追加
-            if (setting.Values["autoadd_list"] != null)
+            if (setting.Values["autoadd_community"] != null)
             {
                 //追加
-                var account_list = setting.Values["autoadd_list"].ToString();
+                var account_list = setting.Values["autoadd_community"].ToString();
                 var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAddAutoAdmissionListViewData>>(account_list);
                 accountJSONArray.Add(new AutoAddAutoAdmissionListViewData { ID = communityID });
                 //JSON配列に変換
-                setting.Values["autoadd_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                setting.Values["autoadd_community"] = JsonConvert.SerializeObject(accountJSONArray);
             }
             else
             {
@@ -70,7 +71,7 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
                 var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAddAutoAdmissionListViewData>>("[]");
                 accountJSONArray.Add(new AutoAddAutoAdmissionListViewData { ID = communityID });
                 //JSON配列に変換
-                setting.Values["autoadd_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                setting.Values["autoadd_community"] = JsonConvert.SerializeObject(accountJSONArray);
             }
             loadAutoAddAutoAdmissionList();
         }
@@ -79,7 +80,7 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
         {
             //削除
             //ダイアログ出す
-            var account_list = setting.Values["autoadd_list"].ToString();
+            var account_list = setting.Values["autoadd_community"].ToString();
             var accountJSONArray = JsonConvert.DeserializeObject<List<NicoFavListJSON>>(account_list);
             ContentDialog deleteFileDialog = new ContentDialog
             {
@@ -97,7 +98,7 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
                 accountJSONArray.RemoveAt(pos);
                 //accountJSONArray.RemoveAt(delete_pos);
                 //保存
-                setting.Values["autoadd_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                setting.Values["autoadd_community"] = JsonConvert.SerializeObject(accountJSONArray);
                 //ListView更新
                 loadAutoAddAutoAdmissionList();
             }
@@ -136,9 +137,6 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
 
         private async void NicorepoTimerAsync(object sender, object e)
         {
-
-            Debug.WriteLine("予約枠自動登録実行");
-
             //ニコレポ巡回
             //今のUnixTime
             long nowUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -174,7 +172,7 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
                                     {
                                         //予約枠自動入場
                                         //追加                           
-                                        addAdmissionList(json.program.title, json.program.id, unix.ToUnixTimeSeconds());
+                                        addAdmissionList(json.program.title, json.program.id, unix.ToUnixTimeSeconds(), json.communityForFollower.id);
                                     }
                                 }
                             }
@@ -236,7 +234,10 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
                                     //なんかしらんけどbeginAtがフォロー中番組だけ値が大きすぎるのでUnixTimeにする割り算
                                     var beginTime = program.beginAt / 1000L;
                                     //予約枠自動入場
-                                    addAdmissionList(program.title, program.id, beginTime);
+                                    //フォロー中の場合はコミュニティIDが取れない問題。
+                                    //めんどくさいけどコミュのサムネURLの一部にコミュのID入ってるので正規表現で取り出す。
+                                    var communityId = regexCommunityID(program.socialGroupThumbnailUrl);
+                                    addAdmissionList(program.title, program.id, beginTime, communityId);
                                 }
                             }
                         }
@@ -245,26 +246,71 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
             }
         }
 
-
-        public void addAdmissionList(string name, string id, long unix)
+        //正規表現でコミュのIDを取り出します。
+        public string regexCommunityID(string text)
         {
-            if (setting.Values["auto_admission_list"] != null)
+            Match matche = Regex.Match(text, "(co|ch)([0-9]+)");
+            if (Regex.IsMatch(text, "(co|ch)([0-9]+)"))
             {
-                //追加
-                var account_list = setting.Values["auto_admission_list"].ToString();
-                var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
-                accountJSONArray.Add(new AutoAdmissionJSON { Name = name, ID = id, UnixTime = unix });
-                //JSON配列に変換
-                setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                //一致した。
+                return matche.Value;
             }
             else
             {
-                //初めて
-                var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>("[]");
-                accountJSONArray.Add(new AutoAdmissionJSON { Name = name, ID = id, UnixTime = unix });
-                //JSON配列に変換
-                setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                return "";
             }
+        }
+
+        public void addAdmissionList(string name, string id, long unix, string communityId)
+        {
+            //予約枠自動登録するコミュニティリスト
+            //設定読み込み
+            var communityList = new List<string>();
+            var communityString = setting.Values["autoadd_community"].ToString();
+            var communityJsonArray = JsonConvert.DeserializeObject<List<AutoAddAutoAdmissionListViewData>>(communityString);
+            foreach (var item in communityJsonArray)
+            {
+                communityList.Add(item.ID);
+            }
+
+            //今の予約枠自動登録リスト
+            //設定読み込み
+            var autoAddList = new List<string>();
+            var addAdmissionString = setting.Values["auto_admission_list"].ToString();
+            var addAdmissionJsonArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(addAdmissionString);
+            foreach (var item in addAdmissionJsonArray)
+            {
+                autoAddList.Add(item.ID);
+            }
+
+
+            //追加済みコミュニティだった！
+            if (communityList.Contains(communityId))
+            {
+                //すでに追加済みの可能性
+                if (!autoAddList.Contains(id))
+                {
+                    if (setting.Values["auto_admission_list"] != null)
+                    {
+                        //追加
+                        var account_list = setting.Values["auto_admission_list"].ToString();
+                        var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
+                        accountJSONArray.Add(new AutoAdmissionJSON { Name = name, ID = id, UnixTime = unix });
+                        //JSON配列に変換
+                        setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    }
+                    else
+                    {
+                        //初めて
+                        var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>("[]");
+                        accountJSONArray.Add(new AutoAdmissionJSON { Name = name, ID = id, UnixTime = unix });
+                        //JSON配列に変換
+                        setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    }
+                }
+            }
+
+
         }
 
     }

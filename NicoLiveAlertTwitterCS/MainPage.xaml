@@ -21,7 +21,7 @@
                 <NavigationViewItem Visibility="Collapsed" Tag="alert_history" Content="アラート履歴" Icon="Clock" Tapped="Navigation_view_Tapped"/>
 
                 <NavigationViewItemHeader x:Name="auto_admission_header" Content="予約枠自動入場" Tapped="Navigation_view_Tapped"/>
-                <NavigationViewItem Tag="alert_list" Content="予約リスト" Icon="Calendar" Tapped="Navigation_view_Tapped"/>
+                <NavigationViewItem Tag="alert_list" Content="予約枠自動入場リスト" Icon="Calendar" Tapped="Navigation_view_Tapped"/>
                 <NavigationViewItem Tag="follow_program" Content="フォロー中の番組" Icon="Favorite" Tapped="Navigation_view_Tapped"/>
                 <NavigationViewItem Tag="nicorepo" Content="ニコレポ" Icon="Video" Tapped="Navigation_view_Tapped"/>
 
@@ -110,7 +110,7 @@
 
                     <Grid x:Name="autoadmission_stackpanel" Visibility="Collapsed">
                         
-                        <ContentDialog  x:Name="AddAdmissionDialog" Title="手動で予約枠を追加する" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="登録" CloseButtonText="キャンセル" PrimaryButtonClick="AddAdmissionDialog_PrimaryButtonClick">
+                        <ContentDialog  x:Name="AddAdmissionDialog" Title="手動で予約枠を追加する" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="登録" SecondaryButtonText="APIで自動取得" CloseButtonText="キャンセル" PrimaryButtonClick="AddAdmissionDialog_PrimaryButtonClick" SecondaryButtonClick="AddAdmissionDialog_SecondaryButtonClick" DefaultButton="Secondary">
                             <StackPanel>
                                 <TextBox x:Name="AddAdmissionDialogProgramTitle" PlaceholderText="番組タイトル"/>
                                 <TextBox x:Name="AddAdmissionDialogProgramID" PlaceholderText="番組ID"/>

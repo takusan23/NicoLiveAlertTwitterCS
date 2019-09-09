@@ -102,13 +102,14 @@ namespace NicoLiveAlertTwitterCS.niconico
             await deleteFileDialog.ShowAsync();
         }
 
-        
+
         public async void addAdmissionProgram(int pos)
         {
             //登録ボタン押した。ダイアログだす
             var item = list[pos];
             var dateTime = FromUnixTime(item.beginAt);
-            //ダイアログ出す
+
+            //確認ダイアログ
             ContentDialog deleteFileDialog = new ContentDialog
             {
                 Title = "この番組は開場時間になったら自動で入場します。",
@@ -117,30 +118,59 @@ namespace NicoLiveAlertTwitterCS.niconico
                 CloseButtonText = "キャンセル"
             };
 
-            ContentDialogResult result = await deleteFileDialog.ShowAsync();
-            //押したとき
-            if (result == ContentDialogResult.Primary)
+            //被りダイアログ
+            ContentDialog errorDiaog = new ContentDialog
             {
-                //追加
-                if (setting.Values["auto_admission_list"] != null)
+                Title = "追加済みです",
+                Content = $"{item.Name}\n入場 : {dateTime.ToString()}",
+                CloseButtonText = "閉じる"
+            };
+
+            //今の予約枠自動登録リスト
+            //設定読み込み
+            var admissionList = new List<string>();
+            var addAdmissionString = setting.Values["auto_admission_list"].ToString();
+            var addAdmissionJsonArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(addAdmissionString);
+            foreach (var admission in addAdmissionJsonArray)
+            {
+                admissionList.Add(admission.ID);
+            }
+
+            //かぶってないか確認
+            if (!admissionList.Contains(item.ID))
+            {
+                //かぶってなければ追加
+                ContentDialogResult result = await deleteFileDialog.ShowAsync();
+                //押したとき
+                if (result == ContentDialogResult.Primary)
                 {
                     //追加
-                    var account_list = setting.Values["auto_admission_list"].ToString();
-                    var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
-                    accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
-                    //JSON配列に変換
-                    setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
-                }
-                else
-                {
-                    //初めて
-                    var account_list = setting.Values["auto_admission_list"].ToString();
-                    var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
-                    accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
-                    //JSON配列に変換
-                    setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    if (setting.Values["auto_admission_list"] != null)
+                    {
+                        //追加
+                        var account_list = setting.Values["auto_admission_list"].ToString();
+                        var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
+                        accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
+                        //JSON配列に変換
+                        setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    }
+                    else
+                    {
+                        //初めて
+                        var account_list = setting.Values["auto_admission_list"].ToString();
+                        var accountJSONArray = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
+                        accountJSONArray.Add(new AutoAdmissionJSON { Name = item.Name, ID = item.ID, UnixTime = item.beginAt });
+                        //JSON配列に変換
+                        setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(accountJSONArray);
+                    }
                 }
             }
+            else
+            {
+                //追加済み
+                await errorDiaog.ShowAsync();
+            }
+
         }
 
         public DateTime FromUnixTime(long unixTime)

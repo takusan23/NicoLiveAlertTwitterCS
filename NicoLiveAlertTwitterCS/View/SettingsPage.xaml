@@ -70,8 +70,9 @@
                                 <StackPanel>
                                     <TextBlock Text="予約枠自動登録機能とは" FontSize="25"/>
                                     <StackPanel Margin="10">
-                                        <TextBlock TextWrapping="Wrap" Text="予約枠自動登録機能とは予め設定したコミュニティが予約枠を作成した場合、自動で予約枠自動入場登録して入場できる機能です。" FontSize="20"/>
+                                        <TextBlock TextWrapping="Wrap" Text="予約枠自動登録機能とは予め設定したコミュニティ・チャンネルが予約枠を作成した場合、自動で予約枠自動入場登録して入場できる機能です。" FontSize="20"/>
                                         <TextBlock TextWrapping="Wrap" Text="そのため一定間隔で予約枠が作成されているか確認しています。" FontSize="20"/>
+                                        <TextBlock TextWrapping="Wrap" Text="（会員限定番組に気をつけて）" FontSize="15"/>
                                     </StackPanel>
                                     <TextBlock Text="予約枠自動登録の間隔" FontSize="25"/>
                                     <StackPanel Margin="10">
@@ -82,7 +83,7 @@
                                         </StackPanel>
                                     </StackPanel>
                                     <StackPanel>
-                                        <TextBlock Text="コミュニティ登録" FontSize="25"/>
+                                        <TextBlock Text="コミュニティ・チャンネル登録" FontSize="25"/>
                                     </StackPanel>
                                     <StackPanel Margin="10" Orientation="Horizontal">
                                         <TextBox PlaceholderText="コミュニティID" Width="300" x:Name="setting_autoadd_autoadmission_community_textbox"></TextBox>
