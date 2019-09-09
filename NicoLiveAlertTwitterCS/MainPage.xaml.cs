@@ -1,4 +1,5 @@
-﻿using NicoLiveAlertTwitterCS.niconico;
+﻿using NicoLiveAlertTwitterCS.AutoAdmission;
+using NicoLiveAlertTwitterCS.niconico;
 using NicoLiveAlertTwitterCS.Twitter;
 using NicoLiveAlertTwitterCS.View;
 using System;
@@ -55,7 +56,8 @@ namespace NicoLiveAlertTwitterCS
         NicoLiveAlertTwitterCS.AutoAdmission.AutoAdmissionList autoAdmissionList = new NicoLiveAlertTwitterCS.AutoAdmission.AutoAdmissionList();
         //自動入場タイマー
         NicoLiveAlertTwitterCS.AutoAdmission.AutoAdmission autoAdmission = new NicoLiveAlertTwitterCS.AutoAdmission.AutoAdmission();
-
+        //予約枠自動登録自動入場
+        AutoAddAutoAdmission addAutoAdmission = new AutoAddAutoAdmission();
 
         public MainPage()
         {
@@ -78,6 +80,8 @@ namespace NicoLiveAlertTwitterCS
 
             //はじめはホーム画面出す
             PanelList[1].Visibility = Visibility.Visible;
+            //ホームを選択しておく
+            navigation_view.SelectedItem = navigation_view.MenuItems[0];
 
             //Twitterアカウント設定
             twitterAccountRegister.initTwitter(false);
@@ -102,32 +106,43 @@ namespace NicoLiveAlertTwitterCS
             //設定
             loadSettings();
 
+
         }
 
         private void loadSettings()
         {
             //起動したらすぐにFilterStreamに接続する
-            if (setting.Values["lunch_filterstream"] != null)
+            if (loadSettingBoolean("setting_lunch_filterstream"))
             {
-                if (Boolean.Parse(setting.Values["lunch_filterstream"].ToString()))
-                {
-                    filterStream.connectFilterStream(this);
-                    home_twitter_stream_switch.IsOn = true;
-                    home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です";
-                }
+                filterStream.connectFilterStream(this);
+                home_twitter_stream_switch.IsOn = true;
+                home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です。";
             }
+            if (loadSettingBoolean("setting_lunch_autoadd"))
+            {
+                filterStream.connectFilterStream(this);
+                home_auto_admission_switch.IsOn = true;
+                home_auto_admission_textblock.Text = "予約枠自動登録自動入場状態：定期巡回中です。";
+            }
+        }
+
+        private Boolean loadSettingBoolean(string key)
+        {
+            //設定をかえすやーつ
+            if (setting.Values[key] != null)
+            {
+                return bool.Parse(setting.Values[key].ToString());
+            }
+            return false;
         }
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            //設定を押したときもNavigation_view_Tappedで処理できるように。
-            var settingItem = navigation_view.SettingsItem as NavigationViewItem;
-            settingItem.Tag = "settings";
-            settingItem.Tapped -= Navigation_view_Tapped;
-            settingItem.Tapped += Navigation_view_Tapped;
-
-            //var tag = args.InvokedItem.ToString();
-            //navigation_view.Header = tag;
+            if (args.IsSettingsInvoked)
+            {
+                //設定選択時
+                showSetting();
+            }
         }
 
         private void Navigation_view_Tapped(object sender, TappedRoutedEventArgs e)
@@ -193,6 +208,7 @@ namespace NicoLiveAlertTwitterCS
             //アカウント追加系も消す
             account_textblock.Visibility = Visibility.Collapsed;
             account_add_button.Visibility = Visibility.Collapsed;
+            AddAdmissionButotn.Visibility = Visibility.Collapsed;
 
             switch (panelName)
             {
@@ -216,6 +232,7 @@ namespace NicoLiveAlertTwitterCS
                     auto_admission_listview.ItemsSource = autoAdmissionList.list;
                     UpdateButton.Visibility = Visibility.Collapsed;
                     PanelList[5].Visibility = Visibility.Visible;
+                    AddAdmissionButotn.Visibility = Visibility.Visible;
                     break;
                 case "follow_program":
                     NavHeaderTitle.Text = "フォロー中の番組";
@@ -238,15 +255,12 @@ namespace NicoLiveAlertTwitterCS
                     UpdateButton.Visibility = Visibility.Collapsed;
                     PanelList[0].Visibility = Visibility.Visible;
                     break;
-                case "settings":
-                    showSetting();
-                    break;
             }
         }
 
-        //設定ウィンドウ表示
         public async void showSetting()
         {
+            //設定ウィンドウ表示
             // https://blog.okazuki.jp/entry/2015/10/23/214946
             var currentViewId = ApplicationView.GetForCurrentView().Id;
             await CoreApplication.CreateNewView().Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -289,7 +303,7 @@ namespace NicoLiveAlertTwitterCS
             if (toggleSwitch.IsOn == true)
             {
                 filterStream.connectFilterStream(this);
-                home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です";
+                home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です。";
             }
             else
             {
@@ -299,20 +313,28 @@ namespace NicoLiveAlertTwitterCS
         }
         private void AutoAdmisionToggleSwitch(object sender, RoutedEventArgs e)
         {
-            //予約枠自動巡回自動入場有効スイッチ
+            //予約枠自動登録自動入場有効スイッチ
             var toggleSwitch = (sender as ToggleSwitch);
             if (toggleSwitch.IsOn == true)
             {
                 //開始。
+                addAutoAdmission.timerFollowAutoAddAdmission();
+                addAutoAdmission.timerNicorepoAutoAddAdmission();
+                addAutoAdmission.nicorepoTimer.Start();
+                addAutoAdmission.followTimer.Start();
+                home_auto_admission_textblock.Text = "予約枠自動登録自動入場状態：定期巡回中です。";
             }
             else
             {
                 //止める。
+                addAutoAdmission.nicorepoTimer.Stop();
+                addAutoAdmission.followTimer.Stop();
+                home_auto_admission_textblock.Text = "予約枠自動登録自動入場状態：停止中です。";
             }
         }
         private void NicoRepoAddAdmissionButtonClick(object sender, RoutedEventArgs e)
         {
-            //ニコ生フォロー中から予約枠自動入場追加した
+            //ニコレポから予約枠自動入場追加した
             nicoRepoList.addAdmissionProgram(int.Parse((sender as Button).Tag.ToString()));
         }
 
@@ -352,6 +374,7 @@ namespace NicoLiveAlertTwitterCS
 
         private void AutoAdmissionDeleteButtonClick(object sender, RoutedEventArgs e)
         {
+            //予約枠自動入場削除
             autoAdmissionList.deleteAutoAdmission(int.Parse((sender as Button).Tag.ToString()));
         }
 
@@ -366,6 +389,30 @@ namespace NicoLiveAlertTwitterCS
                 case "nicorepo":
                     nicoRepoList.loadNicoRepo(true);
                     break;
+            }
+        }
+
+        private async void AddAdmissionButotn_Click(object sender, RoutedEventArgs e)
+        {
+            //予約枠自動入場リストの手動追加ボタン
+            await AddAdmissionDialog.ShowAsync();
+        }
+
+        private void AddAdmissionDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            //予約枠手動登録ダイアログの登録ボタン
+            var title = AddAdmissionDialogProgramTitle.Text;
+            var id = AddAdmissionDialogProgramID.Text;
+            var datePicker = AddAdmissionDialogDatePicker.Date;
+            var timePicker = AddAdmissionDialogTimePicker.Time;
+            if (title != null && id != null && datePicker != null && timePicker != null)
+            {
+                //Dateに時間追加すりゅ
+                var date = DateTime.Parse($"{datePicker.Year}/{datePicker.Month}/{datePicker.Day} {timePicker.Hours}:{timePicker.Minutes}:00");
+                //UnixTimeへ
+                var unix = new DateTimeOffset(date.Ticks, new TimeSpan(+09, 00, 00));
+                //追加する
+                autoAdmissionList.addAdmission(title, id, unix.ToUnixTimeSeconds());
             }
         }
     }

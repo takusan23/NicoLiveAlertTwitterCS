@@ -9,12 +9,131 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <ScrollViewer>
-            <StackPanel Margin="20">
-                <TextBlock Text="設定" FontSize="30" />
-                <TextBlock Text="起動時に自動で（FilterStreamに）接続する"  FontSize="20"/>
-                <ToggleSwitch OnContent="接続" OffContent="接続しない" Toggled="FilterStreamToggleSwitch"></ToggleSwitch>
-            </StackPanel>
-        </ScrollViewer>
+        <NavigationView x:Name="settingNavigationView" IsBackButtonVisible="Collapsed" IsSettingsVisible="False">
+            <NavigationView.MenuItems>
+                <NavigationViewItemHeader x:Name="setting_header" Content="設定"/>
+                <NavigationViewItem Content="起動時の設定" Icon="GoToStart" x:Name="setting_lunch" Tapped="SettingClick"/>
+                <NavigationViewItem Content="外観の設定" x:Name="setting_appearance" Tapped="SettingClick">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE771;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="予約枠自動登録、入場の設定" x:Name="setting_autoadd_autoadmission" Tapped="SettingClick">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8F5;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="このアプリについて" x:Name="setting_info" Tapped="SettingClick">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE946;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <NavigationView.Content>
+
+                <Grid>
+                    <Grid x:Name="setting_lunch_setting_grid" Visibility="Collapsed">
+                        <ScrollViewer>
+                            <StackPanel>
+                                <StackPanel Margin="20">
+                                    <TextBlock Text="ニコ生アラート" FontSize="30" />
+                                    <TextBlock Text="起動時に自動で（FilterStreamに）接続する。"  FontSize="20"/>
+                                    <ToggleSwitch Tag="setting_lunch_filterstream" x:Name="lunch_filterstream" OnContent="接続" OffContent="接続しない" Toggled="SettingToggleSwitch"></ToggleSwitch>
+                                </StackPanel>
+                                <StackPanel Margin="20">
+                                    <TextBlock Text="予約枠自動登録自動登録" FontSize="30" />
+                                    <TextBlock Text="起動時に自動で予約枠自動登録自動登録を開始する。"  FontSize="20"/>
+                                    <ToggleSwitch Tag="setting_lunch_autoadd" x:Name="lunch_autoadd" OnContent="定期巡回" OffContent="終了" Toggled="SettingToggleSwitch"></ToggleSwitch>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <Grid x:Name="setting_appearance_setting_grid" Visibility="Collapsed">
+                        <ScrollViewer>
+                            <StackPanel>
+                                <TextBlock Text="ダーク・ライトテーマ" FontSize="30"  Margin="10" />
+                                <TextBlock Text="白基調が眩しいときは使ってみて下さい。設定は次回起動時から適用されます。" FontSize="20"  Margin="10"/>
+                                <StackPanel Margin="20">
+                                    <RadioButton Content="ダークテーマ（黒メイン）" IsChecked="False" Tapped="ThemeRadioButton" x:Name="setting_theme_dark"/>
+                                    <RadioButton Content="ライトテーマ（白メイン）（標準）"  IsChecked="True"  Tapped="ThemeRadioButton" x:Name="setting_theme_light"/>
+                                    <RadioButton Content="Windowsの設定に従う"  IsChecked="False"  Tapped="ThemeRadioButton" x:Name="setting_theme_auto"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <Grid x:Name="setting_autoadd_autoadmission_setting_grid" Visibility="Collapsed">
+                        <ListView Margin="10" x:Name="autoadd_autoadmission_listview">
+                            <ListView.Header>
+                                <StackPanel>
+                                    <TextBlock Text="予約枠自動登録機能とは" FontSize="25"/>
+                                    <StackPanel Margin="10">
+                                        <TextBlock TextWrapping="Wrap" Text="予約枠自動登録機能とは予め設定したコミュニティが予約枠を作成した場合、自動で予約枠自動入場登録して入場できる機能です。" FontSize="20"/>
+                                        <TextBlock TextWrapping="Wrap" Text="そのため一定間隔で予約枠が作成されているか確認しています。" FontSize="20"/>
+                                    </StackPanel>
+                                    <TextBlock Text="予約枠自動登録の間隔" FontSize="25"/>
+                                    <StackPanel Margin="10">
+                                        <TextBlock Text="ニコレポ、フォロー中の番組へアクセスする間隔（分）" FontSize="20"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox PlaceholderText="間隔（分）" Width="300" Text="10"  x:Name="setting_autoadd_autoadmission_time_textbox"></TextBox>
+                                            <Button Content="設定" x:Name="Setting_AutoAddAutoAdmissionTime" Click="AutoAddAutoAdmissionTime_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="コミュニティ登録" FontSize="25"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="10" Orientation="Horizontal">
+                                        <TextBox PlaceholderText="コミュニティID" Width="300" x:Name="setting_autoadd_autoadmission_community_textbox"></TextBox>
+                                        <Button Content="追加" x:Name="Setting_AutoAddAutoAdmissionCommunityAdd" Click="AutoAddAutoAdmissionCommunityAdd_Click"></Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ListView.Header>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Padding="10">
+                                        <TextBlock Text="{Binding ID}" FontSize="20"/>
+                                        <Button Content="削除" Tag="{Binding Pos}" x:Name="Setting_AutoAddAutoAdmissionCommunityDelete" Click="AutoAddAutoAdmissionCommunityDelete_Click"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+
+                    <Grid x:Name="setting_info_setting_grid" Visibility="Collapsed">
+                        <StackPanel Margin="20">
+                            <StackPanel>
+                                <TextBlock Text="このアプリについて" FontSize="35"/>
+                            </StackPanel>
+                            <StackPanel Margin="10">
+                                <TextBlock Text="ニコ生アラート（青鳥CS）" FontSize="30"/>
+                                <TextBlock Text="1.0" FontSize="25"/>
+                                <TextBlock Text="takusan_23" FontSize="25"/>
+                            </StackPanel>
+                            <StackPanel Margin="10">
+                                <TextBlock Text="何かあればどうぞ"  FontSize="20"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Margin="10" Content="ソースコード" Click="Button_Click"/>
+                                    <Button Margin="10" Content="Twitter" Click="Button_Click"/>
+                                    <Button Margin="10" Content="Mastodon" Click="Button_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Grid>
+
+                </Grid>
+
+            </NavigationView.Content>
+
+            <NavigationView.Header>
+                <StackPanel>
+                    <TextBlock x:Name="settingNavTitle" Text="設定" FontSize="30" VerticalAlignment="Center"/>
+                </StackPanel>
+            </NavigationView.Header>
+
+        </NavigationView>
+
     </Grid>
 </Page>

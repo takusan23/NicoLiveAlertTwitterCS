@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace NicoLiveAlertTwitterCS.ListViewClass
 {
-    class ProgramListViewData
+    class AutoAddAutoAdmissionListViewData
     {
-        public string Name { get; set; }
+        public string CommunityName { get; set; }
         public string ID { get; set; }
         public int Pos { get; set; }
-        public long beginAt { get; set; }
-        public string dateTime { get; set; }
     }
 }

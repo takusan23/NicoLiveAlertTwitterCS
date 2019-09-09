@@ -22,6 +22,12 @@ namespace NicoLiveAlertTwitterCS
     /// </summary>
     sealed partial class App : Application
     {
+
+
+        //データ保存とか
+        Windows.Storage.ApplicationDataContainer setting = Windows.Storage.ApplicationData.Current.RoamingSettings;
+
+
         /// <summary>
         ///単一アプリケーション オブジェクトを初期化します。これは、実行される作成したコードの
         ///最初の行であるため、論理的には main() または WinMain() と等価です。
@@ -30,6 +36,9 @@ namespace NicoLiveAlertTwitterCS
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            //テーマ設定
+            setTheme();
+
         }
 
         /// <summary>
@@ -96,5 +105,40 @@ namespace NicoLiveAlertTwitterCS
             //TODO: アプリケーションの状態を保存してバックグラウンドの動作があれば停止します
             deferral.Complete();
         }
+
+        //テーマを設定するApp.xaml.csでしか変更できない模様
+        private void setTheme()
+        {
+            //ダークモード・ライトテーマを読み込む
+            if (setting.Values["setting_theme"] != null)
+            {
+                switch (setting.Values["setting_theme"])
+                {
+                    case "setting_theme_dark":
+                        //ダーク
+                        RequestedTheme = ApplicationTheme.Dark;
+                        break;
+                    case "setting_theme_light":
+                        //ライト
+                        RequestedTheme = ApplicationTheme.Light;
+                        break;
+                    case "setting_theme_auto":
+                        //Windowsの設定に従う
+                        ApplicationTheme appTheme = Application.Current.RequestedTheme;
+                        if (appTheme == 0)
+                        {
+                            //ライト
+                            RequestedTheme = ApplicationTheme.Light;
+                        }
+                        else
+                        {
+                            //ダーク
+                            RequestedTheme = ApplicationTheme.Dark;
+                        }
+                        break;
+                }
+            }
+        }
+
     }
 }

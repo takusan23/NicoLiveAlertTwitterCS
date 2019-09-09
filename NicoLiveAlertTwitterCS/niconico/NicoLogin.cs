@@ -11,6 +11,9 @@ namespace NicoLiveAlertTwitterCS.niconico
 {
     class NicoLogin
     {
+        //user_session保存
+        Windows.Storage.ApplicationDataContainer setting = Windows.Storage.ApplicationData.Current.RoamingSettings;
+
         public async void niconicoLogin(string mail, string pass)
         {
             //niconicoログイン
@@ -34,8 +37,6 @@ namespace NicoLiveAlertTwitterCS.niconico
             {
                 if (cookie.Name == "user_session")
                 {
-                    //user_session保存
-                    var setting = Windows.Storage.ApplicationData.Current.RoamingSettings;
                     setting.Values["user_session"] = cookie.Value;
                     //一応メアドも保存
                     setting.Values["mail"] = mail;
@@ -52,5 +53,14 @@ namespace NicoLiveAlertTwitterCS.niconico
                 }
             }
         }
+
+        public void ReNiconicoLogin()
+        {
+            //2回目以降はどうぞ
+            var mail = setting.Values["mail"].ToString();
+            var pass = setting.Values["pass"].ToString();
+            niconicoLogin(mail, pass);
+        }
+
     }
 }

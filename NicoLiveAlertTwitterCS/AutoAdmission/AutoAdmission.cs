@@ -59,6 +59,24 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
 
         private void TickTimer(object sender, object e)
         {
+            //クリア
+            liveIdList.Clear();
+            nameList.Clear();
+            unixTimeList.Clear();
+
+            //読み込み
+            var account_list = setting.Values["auto_admission_list"].ToString();
+            autoAdmissionJSON = JsonConvert.DeserializeObject<List<AutoAdmissionJSON>>(account_list);
+
+            //ListView
+            foreach (var autoAdmission in autoAdmissionJSON)
+            {
+                //配列に入れる
+                nameList.Add(autoAdmission.Name);
+                liveIdList.Add(autoAdmission.ID);
+                unixTimeList.Add(autoAdmission.UnixTime);
+            }
+
             //ここで定期実行される
             //今のUnixTime取得
             long nowUnixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -75,10 +93,10 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
                 //通知出す
                 showNotification(name);
 
-                //配列消す
-                liveIdList.RemoveAt(index);
-                nameList.RemoveAt(index);
-                unixTimeList.RemoveAt(index);
+                //開場したので配列から
+                autoAdmissionJSON.RemoveAt(index);
+                //保存
+                setting.Values["auto_admission_list"] = JsonConvert.SerializeObject(autoAdmissionJSON);
             }
         }
 

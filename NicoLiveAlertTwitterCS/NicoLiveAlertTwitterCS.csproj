@@ -119,6 +119,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AutoAdmission\AutoAddAutoAdmission.cs" />
     <Compile Include="AutoAdmission\AutoAdmission.cs" />
     <Compile Include="AutoAdmission\AutoAdmissionList.cs" />
     <Compile Include="JSONClass\AccountJson.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="JSONClass\NicoFavListJSON.cs" />
     <Compile Include="JSONClass\NicoRepoJSON.cs" />
     <Compile Include="ListViewClass\AccountListViewData.cs" />
+    <Compile Include="ListViewClass\AutoAddAutoAdmissionListViewData.cs" />
     <Compile Include="ListViewClass\ProgramListViewData.cs" />
     <Compile Include="niconico\NicoLiveFavList.cs" />
     <Compile Include="niconico\NicoLogin.cs" />

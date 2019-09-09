@@ -9,7 +9,8 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <NavigationView x:Name="navigation_view" IsBackButtonVisible="Collapsed" ItemInvoked="NavigationView_ItemInvoked" >
+
+        <NavigationView  x:Name="navigation_view"  IsBackButtonVisible="Collapsed" ItemInvoked="NavigationView_ItemInvoked" >
 
             <NavigationView.MenuItems>
                 <NavigationViewItem Tag="home" Icon="Home" Content="ホーム" Tapped="Navigation_view_Tapped">
@@ -61,8 +62,8 @@
                             <TextBlock x:Name="home_twitter_stream_textblock" Text="ニコ生アラート状態：接続していません。" FontSize="25"  Padding="10,20,10,10"/>
                             <ToggleSwitch x:Name="home_twitter_stream_switch" Tag="home_twitter_stream_switch" Header="接続することでリアルタイムで番組開始ツイートを監視します。" FontSize="20" Margin="10" OnContent="接続" OffContent="未接続" Toggled="FilterStreamToggleSwitch"/>
 
-                            <TextBlock Visibility="Collapsed" Text="予約枠自動入場" FontSize="25" Padding="10,20,10,10" />
-                            <ToggleSwitch Visibility="Collapsed" Tag="home_auto_admission_switch" Header="自動で予約枠を探し、開場時間になったら開きます。" FontSize="20" Margin="10" OnContent="利用する" OffContent="利用しない" Toggled="AutoAdmisionToggleSwitch"/>
+                            <TextBlock x:Name="home_auto_admission_textblock" Text="予約枠自動登録自動入場状態：停止中です。" FontSize="25" Padding="10,20,10,10" />
+                            <ToggleSwitch x:Name="home_auto_admission_switch" Tag="home_auto_admission_switch" Header="自動で予約枠を探し、開場時間になったら開きます。（設定必須）" FontSize="20" Margin="10" OnContent="定期巡回中" OffContent="利用しない" Toggled="AutoAdmisionToggleSwitch"/>
                         </StackPanel>
                     </Grid>
 
@@ -71,7 +72,7 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Padding="10">
-                                        <TextBlock x:Name="nico_fav_listview_textblock" MaxLines="1" Text="{Binding Name}" FontSize="20"/>
+                                        <TextBlock TextWrapping="Wrap" x:Name="nico_fav_listview_textblock"  Text="{Binding Name}" FontSize="20"/>
                                         <Button Content="予約枠自動入場登録" Tag="{Binding Pos}" Click="NicoFavAddAutoAdmissionButtonClick"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -84,7 +85,7 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Padding="10">
-                                        <TextBlock x:Name="nico_repo_listview_textblock" MaxLines="1" Text="{Binding Name}" FontSize="20"/>
+                                        <TextBlock TextWrapping="Wrap" x:Name="nico_repo_listview_textblock" Text="{Binding Name}" FontSize="20"/>
                                         <Button Content="予約枠自動入場登録" Tag="{Binding Pos}" Click="NicoRepoAddAdmissionButtonClick"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -108,11 +109,23 @@
                     </Grid>
 
                     <Grid x:Name="autoadmission_stackpanel" Visibility="Collapsed">
+                        
+                        <ContentDialog  x:Name="AddAdmissionDialog" Title="手動で予約枠を追加する" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="登録" CloseButtonText="キャンセル" PrimaryButtonClick="AddAdmissionDialog_PrimaryButtonClick">
+                            <StackPanel>
+                                <TextBox x:Name="AddAdmissionDialogProgramTitle" PlaceholderText="番組タイトル"/>
+                                <TextBox x:Name="AddAdmissionDialogProgramID" PlaceholderText="番組ID"/>
+                                <TextBlock Text="開始時間"/>
+                                <DatePicker x:Name="AddAdmissionDialogDatePicker" />
+                                <TimePicker x:Name="AddAdmissionDialogTimePicker"/>
+                            </StackPanel>
+                        </ContentDialog>
+                        
                         <ListView x:Name="auto_admission_listview">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Padding="10">
-                                        <TextBlock x:Name="nico_fav_listview_textblock" MaxLines="1" Text="{Binding Name}" FontSize="20"/>
+                                        <TextBlock TextWrapping="Wrap" x:Name="nico_fav_listview_textblock" Text="{Binding Name}" FontSize="20" FontWeight="Bold"/>
+                                        <TextBlock x:Name="nico_fav_listview_begin_textblock" Text="{Binding dateTime}" FontSize="20"/>
                                         <Button Content="予約枠自動入場削除" Tag="{Binding Pos}" Click="AutoAdmissionDeleteButtonClick"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -144,6 +157,13 @@
                         </StackPanel>
                     </Button>
 
+                    <Button x:Name="AddAdmissionButotn" Click="AddAdmissionButotn_Click" Margin="50,0,0,0" Background="Transparent" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="Add"/>
+                            <TextBlock FontSize="20"> 予約枠手動追加</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    
                 </StackPanel>
             </NavigationView.Header>
 
