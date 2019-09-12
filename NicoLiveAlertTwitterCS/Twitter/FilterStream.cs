@@ -1,4 +1,5 @@
-﻿using CoreTweet.Streaming;
+﻿using CoreTweet;
+using CoreTweet.Streaming;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Newtonsoft.Json;
 using System;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.UserActivities;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Controls;
 
@@ -48,7 +50,7 @@ namespace NicoLiveAlertTwitterCS.Twitter
                 }
 
                 //FilterStreamの検証用。
-                //ids = getTakusan23Followers();
+                ids = getTakusan23Followers();
 
                 //FilterStream
                 Task task = new Task(async () =>
@@ -77,6 +79,7 @@ namespace NicoLiveAlertTwitterCS.Twitter
                                   {
                                       lunchBrowser(findProgramId(tw.Text));
                                       showNotification(tw.Text);
+                                      setMicrosoftTimeline(tw);
                                   }
                               });
                             }
@@ -86,6 +89,7 @@ namespace NicoLiveAlertTwitterCS.Twitter
                             //キャンセルされたので終了
                             return;
                         }
+                        setMicrosoftTimeline(tw);
                     }
                 }, cancelToken);
                 task.Start();
@@ -97,6 +101,25 @@ namespace NicoLiveAlertTwitterCS.Twitter
             }
         }
 
+        UserActivitySession _currentActivity;
+        private async void setMicrosoftTimeline(Status tw)
+        {
+            //タイムラインに追加する
+            var userChannel = UserActivityChannel.GetDefault();
+            var userActivity = await userChannel.GetOrCreateUserActivityAsync("MainPage");
+
+            //設定
+            userActivity.VisualElements.DisplayText = $"番組が開始しました。/n{tw.Text}";
+            userActivity.ActivationUri = new Uri("https://live2.nicovideo.jp/watch/lv321930382?ref=top_favorites&zroute=subscribe&po=topfavonair");
+            //userActivity.ActivationUri = new Uri("https://live2.nicovideo.jp/watch/" + findProgramId(tw.Text));
+
+
+            //保存
+            await userActivity.SaveAsync();
+
+            _currentActivity?.Dispose();
+            _currentActivity = userActivity.CreateSession();
+        }
 
         private async void showLoginMessage()
         {
