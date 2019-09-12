@@ -70,7 +70,8 @@ namespace NicoLiveAlertTwitterCS.niconico
                                 {
                                     //なんかしらんけどbeginAtがフォロー中番組だけ値が大きすぎるのでUnixTimeにする割り算
                                     var beginTime = program.beginAt / 1000L;
-                                    var item = new ProgramListViewData { Name = program.title + " | " + program.socialGroupName + " | " + program.id, Pos = pos, beginAt = beginTime, ID = program.id };
+                                    var dateTime = "開場時間 : " + DateTimeOffset.FromUnixTimeSeconds(beginTime).LocalDateTime.ToString();
+                                    var item = new ProgramListViewData { Name = program.title + " | " + program.socialGroupName + " | " + program.id, Pos = pos, beginAt = beginTime, ID = program.id, dateTime = dateTime };
                                     pos += 1;
                                     list.Add(item);
                                 }

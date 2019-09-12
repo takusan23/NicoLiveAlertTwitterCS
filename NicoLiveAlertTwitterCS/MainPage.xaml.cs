@@ -416,7 +416,6 @@ namespace NicoLiveAlertTwitterCS
                 var unix = new DateTimeOffset(date.Ticks, new TimeSpan(+09, 00, 00));
                 //追加する
                 autoAdmissionList.addAdmission(title, id, unix.ToUnixTimeSeconds());
-
             }
         }
 
@@ -454,6 +453,24 @@ namespace NicoLiveAlertTwitterCS
                     await errorDiaog.ShowAsync();
                 }
             }
+        }
+
+        private async void TwitterLoginConsumerKeyButton_Click(object sender, RoutedEventArgs e)
+        {
+            //コンシューマーキーを持ってる場合
+            await TwitterConsumerKeyDialog.ShowAsync();
+        }
+
+        private async void TwitterConsumerKeyDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        {
+            //コンシューマーキーダイアログからログイン開始
+            TwitterConsumerKeyDialog.Hide();
+            twitterLogin.consumer_key = TwitterConsumerKeyDialogConsumerKey.Text;
+            twitterLogin.consumer_secret = TwitterConsumerKeyDialogConsumerSecret.Text;
+            //Twitterログイン画面出す。
+            twitterLogin.showTwitterParge();
+            //ダイアログ出す
+            await pin_dialog.ShowAsync();
         }
     }
 }

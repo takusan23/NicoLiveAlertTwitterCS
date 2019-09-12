@@ -13,8 +13,8 @@ namespace NicoLiveAlertTwitterCS.Twitter
     {
         OAuthSession session;
         //コンシューマーキー取得
-        String consumer_key = TwitterKey.consumer_key;
-        String consumer_secret = TwitterKey.consumer_secret;
+        public String consumer_key = TwitterKey.consumer_key;
+        public String consumer_secret = TwitterKey.consumer_secret;
 
         //認証画面出す
         public async void showTwitterParge()
@@ -24,6 +24,7 @@ namespace NicoLiveAlertTwitterCS.Twitter
             //非同期らしいー
             await Windows.System.Launcher.LaunchUriAsync(new Uri(session.AuthorizeUri.AbsoluteUri));
         }
+
 
         //PINコードからアクセストークン発行
         public async void getAccessToken(string pin)

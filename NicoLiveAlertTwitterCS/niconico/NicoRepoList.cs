@@ -49,11 +49,13 @@ namespace NicoLiveAlertTwitterCS.niconico
                                     var date = DateTime.Parse(json.program.beginAt);
                                     //DateTime→UnixTime
                                     var unix = new DateTimeOffset(date.Ticks, new TimeSpan(+09, 00, 00));
+                                    //開場時間
+                                    var dateTime = "開場時間 : " + date.ToString();
                                     //すでに終わってる予約枠は拾わない
                                     if (nowUnixTime <= unix.ToUnixTimeSeconds())
                                     {
                                         var name = $"{json.program.title} | {json.community.name} | {json.program.id}";
-                                        var item = new ProgramListViewData { Name = name, beginAt = unix.ToUnixTimeSeconds(), ID = json.program.id, Pos = pos };
+                                        var item = new ProgramListViewData { Name = name, beginAt = unix.ToUnixTimeSeconds(), ID = json.program.id, Pos = pos, dateTime= dateTime };
                                         list.Add(item);
                                         pos += 1;
                                     }

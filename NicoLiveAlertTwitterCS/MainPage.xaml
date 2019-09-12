@@ -45,14 +45,22 @@
                                 <PasswordBox  x:Name="nico_login_dialog_pass_textbox" PlaceholderText="パスワード"  FontSize="20" Height="40" ></PasswordBox>
                             </StackPanel>
                         </ContentDialog>
+                        <ContentDialog x:Name="TwitterConsumerKeyDialog" Title="Twitterコンシューマーキー・コンシューマーシークレット入力" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="認証" SecondaryButtonText="キャンセル" PrimaryButtonClick="TwitterConsumerKeyDialog_PrimaryButtonClick">
+                            <StackPanel>
+                                <TextBlock Text="Twitterの開発者登録ができてる人のための機能です。" FontSize="20"/>
+                                <TextBox x:Name="TwitterConsumerKeyDialogConsumerKey" PlaceholderText="コンシューマーキー" FontSize="20"/>
+                                <TextBox x:Name="TwitterConsumerKeyDialogConsumerSecret" PlaceholderText="コンシューマーシークレット" FontSize="20"/>
+                            </StackPanel>
+                        </ContentDialog>
                         <StackPanel Orientation="Vertical" Padding="10">
                             <StackPanel Orientation="Vertical" Margin="10,20,10,10">
                                 <TextBlock Text="Twitterログインはここから" FontSize="30"></TextBlock>
-                                <Button Content="Twitterログイン" FontSize="20" Click="TwitterLoginButtonClick"></Button>
+                                <Button Content="Twitterログイン" FontSize="20" Click="TwitterLoginButtonClick" Margin="10"></Button>
+                                <Button Content="Twitterログイン（別のコンシューマーキーがある場合）" FontSize="20" x:Name="TwitterLoginConsumerKeyButton" Click="TwitterLoginConsumerKeyButton_Click" Margin="10"></Button>
                             </StackPanel>
                             <StackPanel Orientation="Vertical" Margin="10,20,10,10">
                                 <TextBlock Text="niconicoログインはここから" FontSize="30"></TextBlock>
-                                <Button Content="niconicoログイン" FontSize="20" Click="NicoLoginButtonClick"></Button>
+                                <Button Content="niconicoログイン" FontSize="20" Click="NicoLoginButtonClick" Margin="10"></Button>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -72,7 +80,8 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Padding="10">
-                                        <TextBlock TextWrapping="Wrap" x:Name="nico_fav_listview_textblock"  Text="{Binding Name}" FontSize="20"/>
+                                        <TextBlock FontWeight="Bold" TextWrapping="Wrap"  x:Name="nico_fav_listview_textblock"  Text="{Binding Name}" FontSize="20"/>
+                                        <TextBlock x:Name="nico_fav_time_listview_textblock"  Text="{Binding dateTime}" FontSize="20"/>
                                         <Button Content="予約枠自動入場登録" Tag="{Binding Pos}" Click="NicoFavAddAutoAdmissionButtonClick"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -86,6 +95,7 @@
                                 <DataTemplate>
                                     <StackPanel Padding="10">
                                         <TextBlock TextWrapping="Wrap" x:Name="nico_repo_listview_textblock" Text="{Binding Name}" FontSize="20"/>
+                                        <TextBlock x:Name="nico_repo_time_listview_textblock"  Text="{Binding dateTime}" FontSize="20"/>
                                         <Button Content="予約枠自動入場登録" Tag="{Binding Pos}" Click="NicoRepoAddAdmissionButtonClick"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -109,7 +119,7 @@
                     </Grid>
 
                     <Grid x:Name="autoadmission_stackpanel" Visibility="Collapsed">
-                        
+
                         <ContentDialog  x:Name="AddAdmissionDialog" Title="手動で予約枠を追加する" IsPrimaryButtonEnabled="True" IsSecondaryButtonEnabled="True" PrimaryButtonText="登録" SecondaryButtonText="APIで自動取得" CloseButtonText="キャンセル" PrimaryButtonClick="AddAdmissionDialog_PrimaryButtonClick" SecondaryButtonClick="AddAdmissionDialog_SecondaryButtonClick" DefaultButton="Secondary">
                             <StackPanel>
                                 <TextBox x:Name="AddAdmissionDialogProgramTitle" PlaceholderText="番組タイトル"/>
@@ -119,7 +129,7 @@
                                 <TimePicker x:Name="AddAdmissionDialogTimePicker"/>
                             </StackPanel>
                         </ContentDialog>
-                        
+
                         <ListView x:Name="auto_admission_listview">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -163,7 +173,7 @@
                             <TextBlock FontSize="20"> 予約枠手動追加</TextBlock>
                         </StackPanel>
                     </Button>
-                    
+
                 </StackPanel>
             </NavigationView.Header>
 

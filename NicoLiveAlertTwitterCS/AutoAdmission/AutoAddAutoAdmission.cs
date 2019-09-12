@@ -172,7 +172,7 @@ namespace NicoLiveAlertTwitterCS.AutoAdmission
                                     {
                                         //予約枠自動入場
                                         //追加                           
-                                        addAdmissionList(json.program.title, json.program.id, unix.ToUnixTimeSeconds(), json.communityForFollower.id);
+                                        addAdmissionList(json.program.title, json.program.id, unix.ToUnixTimeSeconds(), json.community.id);
                                     }
                                 }
                             }
