@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using AdaptiveCards;
+using Newtonsoft.Json;
 using NicoLiveAlertTwitterCS.AutoAdmission;
 using NicoLiveAlertTwitterCS.JSONClass;
 using NicoLiveAlertTwitterCS.niconico;
@@ -15,6 +16,7 @@ using Windows.ApplicationModel.UserActivities;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
+using Windows.UI.Shell;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -107,7 +109,6 @@ namespace NicoLiveAlertTwitterCS
 
             //設定
             loadSettings();
-
         }
 
         private void loadSettings()
@@ -119,9 +120,13 @@ namespace NicoLiveAlertTwitterCS
                 home_twitter_stream_switch.IsOn = true;
                 home_twitter_stream_textblock.Text = "ニコ生アラート状態：接続中です。";
             }
+            //起動したらすぐに自動登録巡回を始める
             if (loadSettingBoolean("setting_lunch_autoadd"))
             {
-                filterStream.connectFilterStream(this);
+                addAutoAdmission.timerFollowAutoAddAdmission();
+                addAutoAdmission.timerNicorepoAutoAddAdmission();
+                addAutoAdmission.nicorepoTimer.Start();
+                addAutoAdmission.followTimer.Start();
                 home_auto_admission_switch.IsOn = true;
                 home_auto_admission_textblock.Text = "予約枠自動登録自動入場状態：定期巡回中です。";
             }

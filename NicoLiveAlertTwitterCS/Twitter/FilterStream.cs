@@ -1,4 +1,5 @@
-﻿using CoreTweet;
+﻿using AdaptiveCards;
+using CoreTweet;
 using CoreTweet.Streaming;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Newtonsoft.Json;
@@ -12,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.UserActivities;
 using Windows.UI.Notifications;
+using Windows.UI.Shell;
 using Windows.UI.Xaml.Controls;
 
 namespace NicoLiveAlertTwitterCS.Twitter
@@ -23,6 +25,9 @@ namespace NicoLiveAlertTwitterCS.Twitter
 
         public CancellationToken cancelToken;
         public CancellationTokenSource tokenSource;
+        //Timeline
+        UserActivitySession _currentActivity;
+        AdaptiveCard card;
 
         public void connectFilterStream(Page page)
         {
@@ -50,47 +55,67 @@ namespace NicoLiveAlertTwitterCS.Twitter
                 }
 
                 //FilterStreamの検証用。
-                ids = getTakusan23Followers();
+                //ids = getTakusan23Followers();
 
                 //FilterStream
                 Task task = new Task(async () =>
                 {
                     Debug.WriteLine("接続します");
-                    var stream = twitter.Streaming.Filter(follow: ids).OfType<StatusMessage>().Select(x => x.Status);
-                    foreach (var tw in stream)
+                    try
                     {
-                        //キャンセルされてるか
-                        if (!cancelToken.IsCancellationRequested)
+                        var stream = twitter.Streaming.Filter(follow: ids).OfType<StatusMessage>().Select(x => x.Status);
+                        foreach (var tw in stream)
                         {
-                            //キャンセルされていないときは続ける
-                            //本人以外（RTなんかも拾ってしまう）のツイートには反応しない
-                            if (ids.Contains(tw.User.Id ?? 0))
+                            //キャンセルされてるか
+                            if (!cancelToken.IsCancellationRequested)
                             {
-                                /*
-                                                                Debug.WriteLine("-------------------");
-                                                                Debug.WriteLine(tw.User.Name);
-                                                                Debug.WriteLine(tw.Text);
-                                                                Debug.WriteLine("-------------------");
+                                //キャンセルされていないときは続ける
+                                //本人以外（RTなんかも拾ってしまう）のツイートには反応しない
+                                if (ids.Contains(tw.User.Id ?? 0))
+                                {
+                                    /*
+                                                                    Debug.WriteLine("-------------------");
+                                                                    Debug.WriteLine(tw.User.Name);
+                                                                    Debug.WriteLine(tw.Text);
+                                                                    Debug.WriteLine("-------------------");
 
-                                */
-                                await page.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                              {
-                                  if (!string.IsNullOrEmpty(findProgramId(tw.Text)))
+                                    */
+                                    await page.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                                   {
-                                      lunchBrowser(findProgramId(tw.Text));
-                                      showNotification(tw.Text);
-                                      setMicrosoftTimeline(tw);
-                                  }
-                              });
+                                      //UIスレッドで動く
+                                      if (!string.IsNullOrEmpty(findProgramId(tw.Text)))
+                                      {
+                                          lunchBrowser(findProgramId(tw.Text));
+                                          showNotification(tw);
+                                          setMicrosoftTimeline(tw);
+                                      }
+                                  });
+                                }
+                            }
+                            else
+                            {
+                                //キャンセルされたので終了
+                                return;
                             }
                         }
-                        else
-                        {
-                            //キャンセルされたので終了
-                            return;
-                        }
-                        setMicrosoftTimeline(tw);
+
                     }
+                    catch (TwitterException e)
+                    {
+                        await page.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                        {
+                            //エラー？
+                            ContentDialog errorDiaog = new ContentDialog
+                            {
+                                Title = "リアルタイム更新を有効にできませんでした。",
+                                Content = "Twitter APIの制限にかかった可能性があります。その場合はしばらく待ってから再度接続してみて下さい。",
+                                CloseButtonText = "閉じる"
+                            };
+                            await errorDiaog.ShowAsync();
+                        });
+
+                    }
+
                 }, cancelToken);
                 task.Start();
             }
@@ -101,24 +126,57 @@ namespace NicoLiveAlertTwitterCS.Twitter
             }
         }
 
-        UserActivitySession _currentActivity;
         private async void setMicrosoftTimeline(Status tw)
         {
+            CreateAdaptiveCardForTimeline(tw);
+            var programId = findProgramId(tw.Text);
             //タイムラインに追加する
             var userChannel = UserActivityChannel.GetDefault();
-            var userActivity = await userChannel.GetOrCreateUserActivityAsync("MainPage");
+            var userActivity = await userChannel.GetOrCreateUserActivityAsync($"NicoLiveAlert_TwitterCS_{programId}");
 
             //設定
-            userActivity.VisualElements.DisplayText = $"番組が開始しました。/n{tw.Text}";
-            userActivity.ActivationUri = new Uri("https://live2.nicovideo.jp/watch/lv321930382?ref=top_favorites&zroute=subscribe&po=topfavonair");
-            //userActivity.ActivationUri = new Uri("https://live2.nicovideo.jp/watch/" + findProgramId(tw.Text));
-
+            userActivity.VisualElements.DisplayText = $"番組が開始しました。\n{tw.Text}";
+            userActivity.VisualElements.Content = AdaptiveCardBuilder.CreateAdaptiveCardFromJson(card.ToJson());
+            userActivity.ActivationUri = new Uri("https://live2.nicovideo.jp/watch/" + programId);
 
             //保存
             await userActivity.SaveAsync();
 
             _currentActivity?.Dispose();
             _currentActivity = userActivity.CreateSession();
+        }
+
+        private void CreateAdaptiveCardForTimeline(Status tw)
+        {
+            // Create an adaptive card specifically to reference this app in Windows 10 Timeline.
+            card = new AdaptiveCard("1.0")
+            {
+                // Select a good background image.
+                BackgroundImage = new Uri(tw.User.ProfileImageUrlHttps)
+            };
+
+            // Add a heading to the card, which allows the heading to wrap to the next line if necessary.
+            var apodHeading = new AdaptiveTextBlock
+            {
+                Text = tw.Text,
+                Size = AdaptiveTextSize.Large,
+                Weight = AdaptiveTextWeight.Bolder,
+                Wrap = true,
+                MaxLines = 2
+            };
+            card.Body.Add(apodHeading);
+
+            // Add a description to the card, and note that it can wrap for several lines.
+            var apodDesc = new AdaptiveTextBlock
+            {
+                Text = tw.User.Name,
+                Size = AdaptiveTextSize.Default,
+                Weight = AdaptiveTextWeight.Lighter,
+                Wrap = true,
+                MaxLines = 3,
+                Separator = true
+            };
+            card.Body.Add(apodDesc);
         }
 
         private async void showLoginMessage()
@@ -146,7 +204,7 @@ namespace NicoLiveAlertTwitterCS.Twitter
         }
 
         //通知
-        private void showNotification(string value)
+        private void showNotification(Status tw)
         {
 
             var content = new ToastContent
@@ -162,8 +220,12 @@ namespace NicoLiveAlertTwitterCS.Twitter
                             },
                             new AdaptiveText
                             {
-                                Text = value
+                                Text = tw.Text
                             }
+                        },
+                        AppLogoOverride = new ToastGenericAppLogo()
+                        {
+                            Source = tw.User.ProfileImageUrlHttps
                         }
                     }
                 }
@@ -206,6 +268,8 @@ namespace NicoLiveAlertTwitterCS.Twitter
             }
             return list;
         }
+
+
 
     }
 }
